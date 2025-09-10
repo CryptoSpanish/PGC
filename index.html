@@ -1,9 +1,4 @@
-# Generate an improved HTML that:
-# - Intenta cargar varias fuentes JSON en cascada hasta encontrar datos válidos
-# - Muestra mensajes de estado más claros
-# - Mantiene scroll oculto y UI simplificada (sin selector/importar)
-# - Conserva tabla + acordeón + panel de explicación
-html = r"""<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
@@ -123,7 +118,6 @@ html = r"""<!DOCTYPE html>
 /* 0) Fuentes en cascada (mismo directorio del HTML) */
 const SOURCES = [
   {id:"flat",  url:"./pgc_cuadro_cuentas_flat.json",   label:"flat (plano)"},
-  {id:"demo",  url:"./pgc_cuadro_cuentas_demo.json",   label:"demo (plano)"},
   {id:"nested",url:"./pgc_cuadro_cuentas_nested.json", label:"nested (jerárquico)"}
 ];
 
@@ -316,8 +310,4 @@ $("#next").addEventListener("click", ()=>{ const pages=Math.ceil(filtered.length
 loadCascade();
 </script>
 </body>
-</html>"""
-out = "/mnt/data/index_pgc_json_fallback_scroll.html"
-with open(out, "w", encoding="utf-8") as f:
-    f.write(html)
-out
+</html>
