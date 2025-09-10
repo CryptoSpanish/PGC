@@ -1,21 +1,19 @@
-# Create an updated HTML that:
-# - Carga JSON externo por defecto (sin selector, sin botones de importar/recargar)
-# - Oculta las barras de scroll manteniendo el desplazamiento (CSS cross-browser)
-# - Mantiene tabla + acordeón y panel de explicación
-# - Ajusta JS para no depender de elementos eliminados
+# Generate an improved HTML that:
+# - Intenta cargar varias fuentes JSON en cascada hasta encontrar datos válidos
+# - Muestra mensajes de estado más claros
+# - Mantiene scroll oculto y UI simplificada (sin selector/importar)
+# - Conserva tabla + acordeón + panel de explicación
 html = r"""<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PGC · JSON dinámico (sin controles) · Scroll oculto</title>
-<meta name="description" content="Explorador del PGC consumiendo JSON externo; controles simplificados y scroll oculto." />
+<title>PGC · JSON dinámico (fallback automático) · Scroll oculto</title>
+<meta name="description" content="Explorador del PGC consumiendo JSON externo; carga en cascada hasta encontrar datos válidos." />
 <style>
   :root{ --bg:#0b0f14; --panel:#0f1621; --muted:#8aa0bc; --text:#e7eef8; --accent:#5dd0ff; --card:#0d131d; --border:#1b2431; --chip:#132032; --hl:#1a263a }
   *{box-sizing:border-box}
-  /* Ocultar scrollbar global, manteniendo el scroll (Firefox, IE/Edge legacy, WebKit/Blink) */
-  html{ scrollbar-width:none; -ms-overflow-style:none; }
-  html::-webkit-scrollbar{ display:none; }
+  html{ scrollbar-width:none; -ms-overflow-style:none; } html::-webkit-scrollbar{ display:none; }
   body{margin:0; font-family:system-ui,Inter,Roboto,Segoe UI,Arial; color:var(--text); background:linear-gradient(180deg,#0a0e13,#0b0f14)}
   header{position:sticky; top:0; z-index:10; background:linear-gradient(180deg,rgba(13,19,29,.92),rgba(13,19,29,.65)); border-bottom:1px solid var(--border); backdrop-filter:blur(8px)}
   .wrap{max-width:1200px; margin:0 auto; padding:16px 18px}
@@ -36,7 +34,7 @@ html = r"""<!DOCTYPE html>
   tbody td{padding:8px 10px; border-bottom:1px solid var(--border); font-size:.95rem}
   td.code{font-variant-numeric:tabular-nums; font-weight:700; color:#dff5ff}
   .badge span{display:inline-block; background:var(--chip); border:1px solid var(--border); padding:2px 8px; border-radius:999px; font-size:.75rem}
-  .footer-tools{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid var(--border); color:var(--muted)}
+  .footer-tools{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid var(--border); color:#8aa0bc}
   .pager .btn{padding:6px 8px; background:#142032; border:1px solid var(--border); color:var(--text); border-radius:10px; cursor:pointer}
   .accordion{max-height:calc(100vh - 220px); overflow:auto}
   details{border-top:1px solid var(--border)} details:first-child{border-top:0}
@@ -51,14 +49,16 @@ html = r"""<!DOCTYPE html>
   .chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 14px 12px}
   .chip{background:var(--chip); border:1px solid var(--border); padding:3px 8px; border-radius:999px; font-size:.78rem}
   .explain{padding:0 14px 14px; color:#d6e8ff}
-  .error{color:#ffb3b3; font-size:.92rem}
+  .status{font-size:.9rem}
+  .err{color:#ff9b9b}
+  .ok{color:#90f0c4}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
     <h1><span class="dot"></span> Plan General Contable — JSON dinámico</h1>
-    <div class="sub">Controles simplificados y <b>scroll sin barra visible</b>. Los datos se cargan desde un archivo JSON externo en la misma carpeta.</div>
+    <div class="sub">Carga en cascada: intento <b>flat</b> → si está vacío, <b>demo</b> → si no existe, <b>nested</b> con aplanado automático. Scroll sin barra visible.</div>
     <div class="toolbar">
       <div class="control">🔎
         <input id="q" placeholder="Buscar por código, nombre, grupo… (p. ej., 430, bancos, proveedores)">
@@ -71,16 +71,14 @@ html = r"""<!DOCTYPE html>
           <option>Gasto</option><option>Ingreso</option>
         </select>
       </div>
-      <!-- Se eliminó el selector de fuente/recarga/importación para dejar la UI limpia -->
     </div>
   </div>
 </header>
 
 <div class="wrap">
   <main>
-    <!-- Tabla -->
     <section class="card">
-      <h2>Cuadro de cuentas · resultados <span id="count" style="color:#8aa0bc"></span></h2>
+      <h2>Cuadro de cuentas · resultados <span id="count"></span></h2>
       <div class="table-wrap">
         <table>
           <thead>
@@ -97,11 +95,10 @@ html = r"""<!DOCTYPE html>
           <span id="pageInfo"></span>
           <button class="btn" id="next">→</button>
         </div>
-        <span id="status" class="error"></span>
+        <div class="status" id="status"></div>
       </div>
     </section>
 
-    <!-- Panel de explicación puntual (selección desde tabla) -->
     <aside class="card">
       <h2>Explicación rápida (selección actual)</h2>
       <div class="meta">
@@ -116,7 +113,6 @@ html = r"""<!DOCTYPE html>
     </aside>
   </main>
 
-  <!-- Desplegables (acordeón) -->
   <section class="card" style="margin-top:14px">
     <h2>Desplegable por códigos (explicación técnica)</h2>
     <div id="accordion" class="accordion"></div>
@@ -124,15 +120,14 @@ html = r"""<!DOCTYPE html>
 </div>
 
 <script>
-/* =========================
-   Configuración: JSON por defecto
-   ========================= */
-// Cambia esta ruta si quieres otro archivo:
-const DEFAULT_JSON = "./pgc_cuadro_cuentas_flat.json"; // o ./pgc_cuadro_cuentas_demo.json
+/* 0) Fuentes en cascada (mismo directorio del HTML) */
+const SOURCES = [
+  {id:"flat",  url:"./pgc_cuadro_cuentas_flat.json",   label:"flat (plano)"},
+  {id:"demo",  url:"./pgc_cuadro_cuentas_demo.json",   label:"demo (plano)"},
+  {id:"nested",url:"./pgc_cuadro_cuentas_nested.json", label:"nested (jerárquico)"}
+];
 
-/* =========================
-   Utilidades y reglas PGC
-   ========================= */
+/* 1) Utils + reglas */
 const $=(s,c=document)=>c.querySelector(s);
 const rows=$("#rows"), q=$("#q"), fGroup=$("#fGroup"), fNature=$("#fNature");
 const pageInfo=$("#pageInfo"), count=$("#count"), statusEl=$("#status");
@@ -187,9 +182,7 @@ function fromNestedToFlat(nested){
   return out;
 }
 
-/* =========================
-   Estado y render
-   ========================= */
+/* 2) Estado y render */
 let data=[]; let filtered=[]; let page=1; const pageSize=14; let selection=null;
 
 function initFilterOptions(){
@@ -266,41 +259,43 @@ function renderAccordion(){
   }).join("");
 }
 
-/* =========================
-   Carga de JSON (fetch)
-   ========================= */
-async function loadJSON(url){
-  statusEl.textContent = "";
-  try{
-    const resp = await fetch(url, {cache:"no-store"});
-    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const json = await resp.json();
-    let flat;
-    if (Array.isArray(json)) {              // plano
-      flat = json;
-    } else if (Array.isArray(json?.subgroups) || Array.isArray(json?.accounts) || Array.isArray(json?.groups)) {
-      const nested = Array.isArray(json) ? json : (json.groups || [json]);
-      flat = fromNestedToFlat(nested);
-    } else {
-      const nested = json.groups || [];
-      flat = fromNestedToFlat(nested);
-    }
-    data = (flat||[]).map(x=>({code:String(x.code), name:x.name, group:x.group, subgroup:x.subgroup})).sort((a,b)=>a.code.localeCompare(b.code,'es',{numeric:true}));
-    if(!data.length) throw new Error("El JSON se cargó pero no contiene cuentas reconocibles.");
-    initFilterOptions(); applyFilters(); if(data.length) selectByCode(data[0].code);
-  }catch(err){
-    console.error(err);
-    statusEl.textContent = `No pude cargar ${url}: ${err.message}`;
-    data = []; filtered=[]; renderTable(); $("#accordion").innerHTML = "";
+/* 3) Carga de JSON con fallback */
+async function tryLoad(url){
+  const label = (SOURCES.find(s=>s.url===url)||{}).label || url;
+  statusEl.innerHTML = `Intentando <b>${label}</b>…`;
+  const resp = await fetch(url, {cache:"no-store"});
+  if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json();
+}
+function toFlat(json){
+  if (Array.isArray(json)) return json;
+  const nested = json.groups || json || [];
+  return fromNestedToFlat(Array.isArray(nested)?nested:[nested]);
+}
+async function loadCascade(){
+  let lastErr=null;
+  for (const s of SOURCES){
+    try{
+      const obj = await tryLoad(s.url);
+      let flat = toFlat(obj).map(x=>({code:String(x.code), name:x.name, group:x.group, subgroup:x.subgroup}));
+      flat = flat.filter(x=>x.code && x.name); // sanidad
+      if (flat.length){
+        data = flat.sort((a,b)=>a.code.localeCompare(b.code,'es',{numeric:true}));
+        initFilterOptions(); applyFilters(); if(data.length) selectByCode(data[0].code);
+        statusEl.innerHTML = `<span class="ok">Cargado desde ${s.label}: ${data.length.toLocaleString("es-ES")} cuentas.</span>`;
+        return;
+      }else{
+        lastErr = new Error("sin registros válidos");
+      }
+    }catch(e){ lastErr = e; }
   }
+  statusEl.innerHTML = `<span class="err">No pude cargar datos desde ninguna fuente (${SOURCES.map(s=>s.label).join(" → ")}). Último error: ${lastErr?.message||"desconocido"}.</span>`;
 }
 
-/* =========================
-   Interacciones UI
-   ========================= */
+/* 4) Interacciones */
 function selectByCode(code){
   const r = filtered.find(x=>x.code===code) || data.find(x=>x.code===code);
-  if(!r){ return; }
+  if(!r) return;
   const m = rulesFor(r.code);
   $("#d_code").textContent = r.code;
   $("#d_name").textContent = r.name;
@@ -311,22 +306,18 @@ function selectByCode(code){
   const chips = $("#chips"); chips.innerHTML=""; (m.tags||[]).forEach(t=>{ const el=document.createElement("span"); el.className="chip"; el.textContent=t; chips.appendChild(el); });
   const det = document.querySelector(`#acc-${r.code}`); if(det) det.open = true;
 }
-// filtros/búsqueda
 q.addEventListener("input", applyFilters);
 fGroup.addEventListener("change", applyFilters);
 fNature.addEventListener("change", applyFilters);
-// paginación
 $("#prev").addEventListener("click", ()=>{ if(page>1){ page--; renderTable(); }});
 $("#next").addEventListener("click", ()=>{ const pages=Math.ceil(filtered.length/14); if(page<pages){ page++; renderTable(); }});
 
-/* =========================
-   Inicio
-   ========================= */
-loadJSON(DEFAULT_JSON);
+/* 5) Inicio */
+loadCascade();
 </script>
 </body>
 </html>"""
-path = "/mnt/data/index_pgc_json_scroll_oculto.html"
-with open(path, "w", encoding="utf-8") as f:
+out = "/mnt/data/index_pgc_json_fallback_scroll.html"
+with open(out, "w", encoding="utf-8") as f:
     f.write(html)
-path
+out
