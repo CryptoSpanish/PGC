@@ -1,0 +1,128 @@
+[
+  {
+    "code": "100",
+    "name": "Capital social",
+    "group": "1 – Financiación básica",
+    "subgroup": "10 – Capital"
+  },
+  {
+    "code": "118",
+    "name": "Aportaciones de socios o propietarios",
+    "group": "1 – Financiación básica",
+    "subgroup": "11 – Reservas y otros"
+  },
+  {
+    "code": "170",
+    "name": "Deudas a largo plazo con entidades de crédito",
+    "group": "1 – Financiación básica",
+    "subgroup": "17 – Deudas a largo plazo"
+  },
+  {
+    "code": "200",
+    "name": "Investigación",
+    "group": "2 – Inmovilizado intangible",
+    "subgroup": "20 – Inmovilizado intangible"
+  },
+  {
+    "code": "213",
+    "name": "Maquinaria",
+    "group": "2 – Inmovilizado material",
+    "subgroup": "21 – Inmovilizado material"
+  },
+  {
+    "code": "300",
+    "name": "Mercaderías",
+    "group": "3 – Existencias",
+    "subgroup": "30 – Mercaderías"
+  },
+  {
+    "code": "400",
+    "name": "Proveedores",
+    "group": "4 – Acreedores y deudores por operaciones comerciales",
+    "subgroup": "40 – Proveedores"
+  },
+  {
+    "code": "410",
+    "name": "Acreedores por prestaciones de servicios",
+    "group": "4 – Acreedores y deudores por operaciones comerciales",
+    "subgroup": "41 – Acreedores varios"
+  },
+  {
+    "code": "430",
+    "name": "Clientes",
+    "group": "4 – Acreedores y deudores por operaciones comerciales",
+    "subgroup": "43 – Clientes"
+  },
+  {
+    "code": "470",
+    "name": "H.P. deudora por diversos conceptos",
+    "group": "4 – Acreedores y deudores por operaciones comerciales",
+    "subgroup": "47 – Hacienda Pública"
+  },
+  {
+    "code": "477",
+    "name": "H.P. IVA repercutido",
+    "group": "4 – Acreedores y deudores por operaciones comerciales",
+    "subgroup": "47 – Hacienda Pública"
+  },
+  {
+    "code": "520",
+    "name": "Deudas a corto plazo con entidades de crédito",
+    "group": "5 – Cuentas financieras",
+    "subgroup": "52 – Deudas a corto plazo"
+  },
+  {
+    "code": "540",
+    "name": "Inversiones financieras temporales en instrumentos de patrimonio",
+    "group": "5 – Cuentas financieras",
+    "subgroup": "54 – Inversiones temporales"
+  },
+  {
+    "code": "570",
+    "name": "Caja",
+    "group": "5 – Cuentas financieras",
+    "subgroup": "57 – Tesorería"
+  },
+  {
+    "code": "572",
+    "name": "Bancos",
+    "group": "5 – Cuentas financieras",
+    "subgroup": "57 – Tesorería"
+  },
+  {
+    "code": "600",
+    "name": "Compras de mercaderías",
+    "group": "6 – Compras y gastos",
+    "subgroup": "60 – Compras"
+  },
+  {
+    "code": "622",
+    "name": "Reparaciones y conservación",
+    "group": "6 – Compras y gastos",
+    "subgroup": "62 – Servicios exteriores"
+  },
+  {
+    "code": "700",
+    "name": "Ventas de mercaderías",
+    "group": "7 – Ventas e ingresos",
+    "subgroup": "70 – Ventas"
+  },
+  {
+    "code": "705",
+    "name": "Prestaciones de servicios",
+    "group": "7 – Ventas e ingresos",
+    "subgroup": "70 – Ventas/Servicios"
+  },
+  {
+    "code": "800",
+    "name": "Gastos por valoración de instrumentos financieros",
+    "group": "8 – Gastos imputados al patrimonio neto",
+    "subgroup": "80 – Ajustes a PN (gastos)"
+  },
+  {
+    "code": "900",
+    "name": "Ingresos por valoración de instrumentos financieros",
+    "group": "9 – Ingresos imputados al patrimonio neto",
+    "subgroup": "90 – Ajustes a PN (ingresos)"
+  }
+]
