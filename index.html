@@ -3,122 +3,73 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Explorador PGC · Cuadro de Cuentas</title>
-<meta name="description" content="Tabla avanzada del PGC con buscador, filtros y explicación técnica por código" />
+<title>PGC · Tabla + Desplegables · Datos desde JSON</title>
+<meta name="description" content="Explorador del PGC consumiendo archivos JSON externos (plano o jerárquico)." />
 <style>
-  :root{
-    --bg:#0b0f14; --panel:#0f1621; --muted:#7e8aa0; --text:#e7eef8; --accent:#5dd0ff;
-    --accent-2:#90f0c4; --danger:#ff6b6b; --ok:#a0ff6b; --warn:#ffd56b;
-    --card:#0d131d; --border:#1b2431; --chip:#132032; --hl:#263246;
-  }
+  :root{ --bg:#0b0f14; --panel:#0f1621; --muted:#8aa0bc; --text:#e7eef8; --accent:#5dd0ff; --card:#0d131d; --border:#1b2431; --chip:#132032; --hl:#1a263a }
   *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Arial;
-    color:var(--text); background:
-      radial-gradient(1200px 800px at 10% -10%, #142033 0%, transparent 60%),
-      radial-gradient(1200px 800px at 110% 10%, #132733 0%, transparent 60%),
-      linear-gradient(180deg, #0a0e13, #0b0f14);
-  }
-  header{
-    position:sticky; top:0; z-index:10; backdrop-filter:saturate(140%) blur(8px);
-    background:linear-gradient(180deg, rgba(13,19,29,.9), rgba(13,19,29,.65));
-    border-bottom:1px solid var(--border);
-  }
-  .wrap{max-width:1200px; margin:0 auto; padding:16px 20px}
-  h1{margin:0; font-size:1.5rem; letter-spacing:.2px; display:flex; gap:.6rem; align-items:center}
-  h1 .dot{width:10px; height:10px; border-radius:50%; background:var(--accent);
-    box-shadow:0 0 14px var(--accent)}
-  .sub{color:var(--muted); font-size:.95rem; margin-top:6px}
-
-  .toolbar{
-    display:grid; grid-template-columns:1.4fr .8fr .8fr auto; gap:10px; margin-top:14px
-  }
-  .control{
-    background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:10px 12px; display:flex; gap:10px; align-items:center
-  }
-  .control input[type="text"]{all:unset; flex:1; font-size:0.98rem}
-  .control select{all:unset; font-size:.95rem; background:var(--chip); padding:6px 10px; border-radius:10px; border:1px solid var(--border)}
-  .btn{
-    background:linear-gradient(180deg,#172235,#121b2b); border:1px solid var(--border); color:var(--text);
-    padding:10px 14px; border-radius:12px; font-weight:600; cursor:pointer; transition:.2s transform, .2s opacity
-  }
-  .btn:hover{transform:translateY(-1px)}
-  .btn:active{transform:translateY(0)}
-  .btn-accent{border-color:#1d314a; box-shadow:0 0 0 1px #1d314a inset; color:#dff6ff}
-  .btn-secondary{background:#142032}
-
-  main{display:grid; grid-template-columns: 1fr 360px; gap:14px; margin-top:16px}
-  @media (max-width:980px){ main{grid-template-columns:1fr} }
-
-  .card{
-    background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden
-  }
-  .card h2{margin:0; padding:12px 14px; font-size:1rem; border-bottom:1px solid var(--border); background:#0f1723}
-  .table-wrap{max-height:66vh; overflow:auto}
+  body{margin:0; font-family:system-ui,Inter,Roboto,Segoe UI,Arial; color:var(--text); background:linear-gradient(180deg,#0a0e13,#0b0f14)}
+  header{position:sticky; top:0; z-index:10; background:linear-gradient(180deg,rgba(13,19,29,.92),rgba(13,19,29,.65)); border-bottom:1px solid var(--border); backdrop-filter:blur(8px)}
+  .wrap{max-width:1200px; margin:0 auto; padding:16px 18px}
+  h1{margin:0; font-size:1.5rem; display:flex; gap:.6rem; align-items:center}
+  h1 .dot{width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 14px var(--accent)}
+  .sub{color:var(--muted); margin-top:6px}
+  .toolbar{display:grid; grid-template-columns:1.2fr .9fr .9fr auto; gap:10px; margin-top:12px}
+  .control{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:10px 12px; display:flex; gap:10px; align-items:center}
+  .control input{all:unset; flex:1}
+  .control select{all:unset; background:var(--chip); border:1px solid var(--border); padding:6px 10px; border-radius:10px}
+  .btn{background:#142032; border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:10px; cursor:pointer}
+  .btn:disabled{opacity:.55; cursor:not-allowed}
+  main{display:grid; grid-template-columns:1fr 420px; gap:14px; margin-top:14px}
+  @media (max-width:1050px){ main{grid-template-columns:1fr} }
+  .card{background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden}
+  .card h2{margin:0; padding:12px 14px; border-bottom:1px solid var(--border); background:#0f1723; font-size:1rem}
+  .table-wrap{max-height:45vh; overflow:auto}
   table{width:100%; border-collapse:separate; border-spacing:0}
-  thead th{
-    position:sticky; top:0; background:#101827; z-index:1; font-size:.88rem;
-    border-bottom:1px solid var(--border); color:#b9c8df; text-align:left; padding:10px
-  }
-  tbody tr{border-bottom:1px solid var(--border)}
-  tbody tr:hover{background:var(--hl)}
-  td{padding:10px; font-size:.95rem; vertical-align:top}
-  td.code{font-variant-numeric:tabular-nums; font-weight:700; color:#d9f1ff}
-  td.badge span{display:inline-block; padding:3px 8px; border-radius:999px; font-size:.75rem; border:1px solid var(--border); background:var(--chip)}
-  mark{background:transparent; color:inherit; position:relative}
-  mark::after{
-    content:""; position:absolute; inset:-1px 0 -2px 0; background:linear-gradient(90deg, transparent, rgba(93,208,255,.25), transparent);
-    border-bottom:1px dashed rgba(93,208,255,.35); pointer-events:none
-  }
-  .footer-tools{display:flex; justify-content:space-between; padding:10px 12px; align-items:center; gap:8px; border-top:1px solid var(--border)}
-  .pager{display:flex; gap:6px; align-items:center}
-  .pager .btn{padding:6px 10px; font-size:.9rem}
-  .muted{color:var(--muted); font-size:.9rem}
-
-  .details{display:flex; flex-direction:column; gap:10px}
-  .kv{display:grid; grid-template-columns:120px 1fr; gap:4px 10px; padding:10px 12px}
-  .kv div:nth-child(odd){color:#a8b7cf; font-size:.88rem}
-  .kv div:nth-child(even){color:#e5f0ff}
-  .chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 12px 10px}
-  .chip{background:var(--chip); border:1px solid var(--border); padding:4px 8px; font-size:.8rem; border-radius:999px}
-  .note{border-top:1px dashed var(--border); padding:10px 12px; color:#cfe8ff}
-  .note textarea{
-    width:100%; min-height:90px; background:#0c1522; color:#fff; border:1px solid var(--border); border-radius:10px; padding:10px; resize:vertical
-  }
-  .drop{
-    border:1px dashed #2d4160; background:#0b121d; color:#c9def3; text-align:center; padding:12px; border-radius:12px
-  }
-  .drop.drag{outline:2px solid var(--accent)}
+  thead th{position:sticky; top:0; background:#0f1a2b; color:#c4d2e6; text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); font-size:.9rem}
+  tbody td{padding:8px 10px; border-bottom:1px solid var(--border); font-size:.95rem}
+  td.code{font-variant-numeric:tabular-nums; font-weight:700; color:#dff5ff}
+  .badge span{display:inline-block; background:var(--chip); border:1px solid var(--border); padding:2px 8px; border-radius:999px; font-size:.75rem}
+  .footer-tools{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid var(--border); color:var(--muted)}
+  .pager .btn{padding:6px 8px}
+  .accordion{max-height:calc(100vh - 220px); overflow:auto}
+  details{border-top:1px solid var(--border)} details:first-child{border-top:0}
+  details[open]{background:var(--hl)}
+  summary{list-style:none; cursor:pointer; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:10px}
+  summary::-webkit-details-marker{display:none}
+  .sum-left{display:flex; gap:10px; align-items:center}
+  .pill{font-variant-numeric:tabular-nums; font-weight:700; background:#0f2136; border:1px solid var(--border); padding:2px 8px; border-radius:8px; color:#dff5ff}
+  .meta{display:grid; grid-template-columns:140px 1fr; gap:6px 10px; padding:0 14px 12px 14px}
+  .meta div:nth-child(odd){color:#a9bbd6; font-size:.9rem}
+  .meta div:nth-child(even){color:#ecf5ff}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 14px 12px}
+  .chip{background:var(--chip); border:1px solid var(--border); padding:3px 8px; border-radius:999px; font-size:.78rem}
+  .explain{padding:0 14px 14px; color:#d6e8ff}
+  .error{color:#ffb3b3; font-size:.92rem}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <h1><span class="dot"></span> Explorador del Plan General Contable (PGC)</h1>
-    <div class="sub">Tabla con buscador + explicación técnica por código. Si existe un archivo <strong>pgc_cuadro_cuentas_demo.json</strong> en esta misma carpeta, lo cargaré automáticamente.</div>
+    <h1><span class="dot"></span> Plan General Contable — JSON dinámico</h1>
+    <div class="sub">Trabajo con archivos JSON (plano o jerárquico). Cambia de fuente arriba o importa otro fichero.</div>
     <div class="toolbar">
-      <div class="control">
-        🔎 <input id="q" type="text" placeholder="Buscar por código, nombre o texto… (p. ej., 430, clientes, bancos)" />
+      <div class="control">🔎
+        <input id="q" placeholder="Buscar por código, nombre, grupo… (p. ej., 430, bancos, proveedores)">
       </div>
       <div class="control">
-        <select id="fGroup" title="Filtrar por grupo">
-          <option value="">Grupo (1–9)</option>
-        </select>
-        <select id="fNature" title="Filtrar por naturaleza">
+        <select id="fGroup"><option value="">Grupo (1–9)</option></select>
+        <select id="fNature">
           <option value="">Naturaleza</option>
-          <option>Activo</option>
-          <option>Pasivo</option>
-          <option>Patrimonio neto</option>
-          <option>Gasto</option>
-          <option>Ingreso</option>
+          <option>Activo</option><option>Pasivo</option><option>Patrimonio neto</option>
+          <option>Gasto</option><option>Ingreso</option>
         </select>
       </div>
-      <div class="control drop" id="drop">Arrastra aquí tu JSON del Cuadro de Cuentas</div>
-      <div class="control" style="gap:8px; justify-content:flex-end">
-        <button class="btn btn-secondary" id="btnImport">Importar JSON</button>
-        <input id="file" type="file" accept=".json,application/json" hidden />
-        <button class="btn btn-accent" id="btnReset">Restablecer</button>
+      <div class="control" style="gap:8px">
+        <select id="source"></select>
+        <button class="btn" id="btnReload">Recargar</button>
+        <button class="btn" id="btnImport">Importar JSON</button>
+        <input id="file" type="file" accept=".json,application/json" hidden>
       </div>
     </div>
   </div>
@@ -126,18 +77,14 @@
 
 <div class="wrap">
   <main>
+    <!-- Tabla -->
     <section class="card">
-      <h2>Cuadro de cuentas · resultados <span id="count" class="muted"></span></h2>
+      <h2>Cuadro de cuentas · resultados <span id="count" style="color:#8aa0bc"></span></h2>
       <div class="table-wrap">
-        <table id="grid">
+        <table>
           <thead>
             <tr>
-              <th data-k="code">Código</th>
-              <th data-k="name">Nombre</th>
-              <th data-k="group">Grupo</th>
-              <th data-k="subgroup">Subgrupo</th>
-              <th data-k="nature">Naturaleza</th>
-              <th data-k="present">Presentación</th>
+              <th>Código</th><th>Nombre</th><th>Grupo</th><th>Subgrupo</th><th>Naturaleza</th><th>Presentación</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -146,77 +93,67 @@
       <div class="footer-tools">
         <div class="pager">
           <button class="btn" id="prev">←</button>
-          <span class="muted" id="pageInfo"></span>
+        <span id="pageInfo"></span>
           <button class="btn" id="next">→</button>
         </div>
-        <div class="muted">Haz clic en una fila para ver la explicación técnica.</div>
+        <span>Haz clic en una fila para abrir su desplegable. <span id="status" class="error"></span></span>
       </div>
     </section>
 
+    <!-- Panel de explicación puntual (selección desde tabla) -->
     <aside class="card">
-      <h2>Explicación técnica del código</h2>
-      <div class="details" id="details">
-        <div class="kv">
-          <div>Código</div><div id="d_code" class="strong">—</div>
-          <div>Nombre</div><div id="d_name">—</div>
-          <div>Jerarquía</div><div id="d_path">—</div>
-          <div>Naturaleza</div><div id="d_nature">—</div>
-          <div>Saldo normal</div><div id="d_balance">—</div>
-          <div>Presentación</div><div id="d_present">—</div>
-        </div>
-        <div class="chips" id="chips"></div>
-        <div class="note">
-          <div style="margin:6px 0 8px; color:#a7bad4; font-size:.9rem">Notas del usuario (opcional)</div>
-          <textarea id="d_notes" placeholder="Añade aquí cualquier precisión o referencia interna sobre el uso de esta cuenta…"></textarea>
-        </div>
+      <h2>Explicación rápida (selección actual)</h2>
+      <div class="meta">
+        <div>Código</div>      <div id="d_code">—</div>
+        <div>Nombre</div>      <div id="d_name">—</div>
+        <div>Jerarquía</div>   <div id="d_path">—</div>
+        <div>Naturaleza</div>  <div id="d_nature">—</div>
+        <div>Saldo normal</div><div id="d_balance">—</div>
+        <div>Presentación</div><div id="d_present">—</div>
       </div>
+      <div class="chips" id="chips"></div>
     </aside>
   </main>
+
+  <!-- Desplegables (acordeón) -->
+  <section class="card" style="margin-top:14px">
+    <h2>Desplegable por códigos (explicación técnica)</h2>
+    <div id="accordion" class="accordion"></div>
+  </section>
 </div>
 
 <script>
-// 1) DEMO mínimo de seguridad por si no hay JSON externo
-const demo = [
-  {"code":"100","name":"Capital social","group":"1 – Financiación básica","subgroup":"10 – Capital"},
-  {"code":"118","name":"Aportaciones de socios o propietarios","group":"1 – Financiación básica","subgroup":"11 – Reservas y otros"},
-  {"code":"170","name":"Deudas a largo plazo con entidades de crédito","group":"1 – Financiación básica","subgroup":"17 – Deudas a largo plazo"},
-  {"code":"200","name":"Investigación","group":"2 – Inmovilizado intangible","subgroup":"20 – Inmovilizado intangible"},
-  {"code":"213","name":"Maquinaria","group":"2 – Inmovilizado material","subgroup":"21 – Inmovilizado material"},
-  {"code":"300","name":"Mercaderías","group":"3 – Existencias","subgroup":"30 – Mercaderías"},
-  {"code":"400","name":"Proveedores","group":"4 – Acreedores y deudores por operaciones comerciales","subgroup":"40 – Proveedores"},
-  {"code":"410","name":"Acreedores por prestaciones de servicios","group":"4 – Acreedores y deudores por operaciones comerciales","subgroup":"41 – Acreedores varios"},
-  {"code":"430","name":"Clientes","group":"4 – Acreedores y deudores por operaciones comerciales","subgroup":"43 – Clientes"},
-  {"code":"470","name":"H.P. deudora por diversos conceptos","group":"4 – Acreedores y deudores por operaciones comerciales","subgroup":"47 – Hacienda Pública"},
-  {"code":"477","name":"H.P. IVA repercutido","group":"4 – Acreedores y deudores por operaciones comerciales","subgroup":"47 – Hacienda Pública"},
-  {"code":"520","name":"Deudas a corto plazo con entidades de crédito","group":"5 – Cuentas financieras","subgroup":"52 – Deudas a corto plazo"},
-  {"code":"570","name":"Caja","group":"5 – Cuentas financieras","subgroup":"57 – Tesorería"},
-  {"code":"572","name":"Bancos","group":"5 – Cuentas financieras","subgroup":"57 – Tesorería"},
-  {"code":"600","name":"Compras de mercaderías","group":"6 – Compras y gastos","subgroup":"60 – Compras"},
-  {"code":"622","name":"Reparaciones y conservación","group":"6 – Compras y gastos","subgroup":"62 – Servicios exteriores"},
-  {"code":"700","name":"Ventas de mercaderías","group":"7 – Ventas e ingresos","subgroup":"70 – Ventas"},
-  {"code":"705","name":"Prestaciones de servicios","group":"7 – Ventas e ingresos","subgroup":"70 – Ventas/Servicios"},
-  {"code":"800","name":"Gastos por valoración de instrumentos financieros","group":"8 – Gastos imputados al patrimonio neto","subgroup":"80 – Ajustes a PN (gastos)"},
-  {"code":"900","name":"Ingresos por valoración de instrumentos financieros","group":"9 – Ingresos imputados al patrimonio neto","subgroup":"90 – Ajustes a PN (ingresos)"}
+/* =========================
+   0) Configuración de fuentes
+   ========================= */
+const DATA_SOURCES = [
+  {id:"demo",  label:"demo (plano)", url:"./pgc_cuadro_cuentas_demo.json"},
+  {id:"flat",  label:"flat (plano)", url:"./pgc_cuadro_cuentas_flat.json"},
+  {id:"nested",label:"nested (jerárquico)", url:"./pgc_cuadro_cuentas_nested.json"}
 ];
 
-// 2) Reglas de naturaleza/saldo/presentación
+/* =========================
+   1) Utilidades y reglas PGC
+   ========================= */
+const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>Array.from(c.querySelectorAll(s));
+const rows=$("#rows"), q=$("#q"), fGroup=$("#fGroup"), fNature=$("#fNature");
+const pageInfo=$("#pageInfo"), count=$("#count"), statusEl=$("#status"), sourceSel=$("#source");
+
 function rulesFor(code){
   const g = String(code).trim()[0];
   let nature="", balance="", present="", tags=[];
   switch(g){
-    case "1":
-      nature = (code.startsWith("10")||code.startsWith("11")) ? "Patrimonio neto" : "Pasivo";
-      balance = "Acreedor"; present="Balance (no corriente / financiación básica)"; break;
+    case "1": nature=(code.startsWith("10")||code.startsWith("11"))?"Patrimonio neto":"Pasivo"; balance="Acreedor"; present="Balance (no corriente / financiación básica)"; break;
     case "2": nature="Activo"; balance="Deudor"; present="Balance (activo no corriente)"; break;
     case "3": nature="Activo"; balance="Deudor"; present="Balance (existencias · activo corriente)"; break;
     case "4":
-      if (/^43/.test(code)) { nature="Activo"; balance="Deudor"; present="Balance (créditos comerciales · corriente)"; }
-      else if (/^47/.test(code)) { nature="Activo/Pasivo"; balance="Mixto"; present="Balance (Hacienda Pública · corriente)"; tags.push("Regularizable"); }
+      if(/^43/.test(code)){ nature="Activo"; balance="Deudor"; present="Balance (créditos comerciales · corriente)"; }
+      else if(/^47/.test(code)){ nature="Activo/Pasivo"; balance="Mixto"; present="Balance (Hacienda Pública · corriente)"; tags.push("Regularizable"); }
       else { nature="Pasivo"; balance="Acreedor"; present="Balance (deudas comerciales · corriente)"; }
       break;
     case "5":
-      if (/^57/.test(code)) { nature="Activo"; balance="Deudor"; present="Balance (tesorería · corriente)"; }
-      else if (/^52/.test(code)) { nature="Pasivo"; balance="Acreedor"; present="Balance (deudas financieras · corriente)"; }
+      if(/^57/.test(code)){ nature="Activo"; balance="Deudor"; present="Balance (tesorería · corriente)"; }
+      else if(/^52/.test(code)){ nature="Pasivo"; balance="Acreedor"; present="Balance (deudas financieras · corriente)"; }
       else { nature="Activo/Pasivo"; balance="Mixto"; present="Balance (cuentas financieras)"; }
       break;
     case "6": nature="Gasto"; balance="Deudor"; present="Cuenta de Pérdidas y Ganancias (gastos)"; break;
@@ -229,122 +166,194 @@ function rulesFor(code){
   return {nature,balance,present,tags};
 }
 
-// 3) Estado + utilidades
-let data = [];     // se rellenará con el JSON externo o DEMO
-let filtered = []; let page = 1, pageSize = 12, selection = null;
-
-const $=(s,c=document)=>c.querySelector(s);
-const rows = $("#rows"), q=$("#q"), fGroup=$("#fGroup"), fNature=$("#fNature");
-const pageInfo=$("#pageInfo"), count=$("#count");
-
-function initFilters(){
-  const groups = [...new Set(data.map(x=>String(x.code)[0]))].sort();
-  fGroup.innerHTML = '<option value=\"\">Grupo (1–9)</option>' + groups.map(g=>{
-    const label = ({
-      "1":"1 – Financiación básica","2":"2 – Activo no corriente","3":"3 – Existencias",
-      "4":"4 – Acreedores y deudores por operaciones comerciales","5":"5 – Cuentas financieras",
-      "6":"6 – Compras y gastos","7":"7 – Ventas e ingresos","8":"8 – Gastos a PN","9":"9 – Ingresos a PN"
-    })[g] || (g+\" – Grupo\");
-    return `<option value=\"${g}\">${label}</option>`;
-  }).join(\"\");
-}
-function normalizeRecord(r){
+function normalizeFlat(r){
   const meta = rulesFor(r.code);
-  return {...r, group: r.group || `${String(r.code)[0]} – Grupo`, nature: r.nature || meta.nature,
-          balance: r.balance || meta.balance, present: r.present || meta.present, _tags: meta.tags};
+  return {...r,
+    group: r.group || `${String(r.code)[0]} – Grupo`,
+    nature: r.nature || meta.nature,
+    balance: r.balance || meta.balance,
+    present: r.present || meta.present,
+    _tags: meta.tags
+  };
+}
+function fromNestedToFlat(nested){
+  const out=[];
+  (nested||[]).forEach(g=>{
+    const gLabel = `${g.code} – ${g.name||"Grupo"}`;
+    (g.subgroups||[]).forEach(sg=>{
+      const sgLabel = `${sg.code} – ${sg.name||"Subgrupo"}`;
+      (sg.accounts||[]).forEach(acc=>{
+        out.push({code:String(acc.code), name:acc.name, group:gLabel, subgroup:sgLabel});
+      });
+    });
+  });
+  return out;
+}
+
+/* =========================
+   2) Estado y render
+   ========================= */
+let data=[]; let filtered=[]; let page=1; const pageSize=14; let selection=null;
+
+function initFilterOptions(){
+  const groups = [...new Set(data.map(x=>String(x.code)[0]))].sort();
+  fGroup.innerHTML = '<option value="">Grupo (1–9)</option>' + groups.map(g=>{
+    const label = ({"1":"1 – Financiación básica","2":"2 – Activo no corriente","3":"3 – Existencias","4":"4 – Acreedores y deudores por operaciones comerciales","5":"5 – Cuentas financieras","6":"6 – Compras y gastos","7":"7 – Ventas e ingresos","8":"8 – Gastos a PN","9":"9 – Ingresos a PN"})[g] || (g+" – Grupo");
+    return `<option value="${g}">${label}</option>`;
+  }).join("");
 }
 function applyFilters(){
   const term = q.value.trim().toLowerCase();
   const g = fGroup.value; const n = fNature.value;
-  const withMeta = data.map(normalizeRecord);
+  const withMeta = data.map(normalizeFlat);
   filtered = withMeta.filter(r=>{
     const passG = g ? String(r.code).startsWith(g) : true;
     const passN = n ? r.nature===n : true;
-    const text = [r.code,r.name,r.group,r.subgroup,r.nature,r.present].join(\" \").toLowerCase();
+    const text = [r.code,r.name,r.group,r.subgroup,r.nature,r.present].join(" ").toLowerCase();
     const passQ = term ? text.includes(term) : true;
     return passG && passN && passQ;
   });
-  page=1; render();
+  page=1; renderTable(); renderAccordion();
 }
 function hl(text, term){
   if(!term) return text;
-  const esc = term.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
-  return text.replace(new RegExp(esc, \"ig\"), m=>`<mark>${m}</mark>`);
+  const esc = term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return text.replace(new RegExp(esc,"ig"), m=>`<mark>${m}</mark>`);
 }
-function render(){
-  const term = q.value.trim();
-  const total = filtered.length;
-  const start = (page-1)*pageSize; const end = Math.min(start+pageSize, total);
-  const view = filtered.slice(start, end);
-  rows.innerHTML = view.map(r=>{
-    return `<tr data-code=\"${r.code}\">
-      <td class=\"code\">${hl(r.code, term)}</td>
-      <td>${hl(r.name, term)}</td>
-      <td class=\"badge\"><span>${hl(r.group, term)}</span></td>
-      <td class=\"badge\"><span>${hl(r.subgroup||\"—\", term)}</span></td>
-      <td>${r.nature||\"—\"}</td>
-      <td>${r.present||\"—\"}</td>
-    </tr>`;
-  }).join(\"\");
-  count.textContent = total ? `· ${total.toLocaleString(\"es-ES\")} coincidencia(s)` : \"· 0\";
-  pageInfo.textContent = total ? `Página ${page} · ${start+1}–${end} / ${total}` : \"Sin resultados\";
+function renderTable(){
+  const term=q.value.trim(); const total=filtered.length; const start=(page-1)*pageSize; const end=Math.min(start+pageSize,total);
+  const view=filtered.slice(start,end);
+  rows.innerHTML = view.map(r=>`
+    <tr data-code="${r.code}">
+      <td class="code">${hl(r.code,term)}</td>
+      <td>${hl(r.name,term)}</td>
+      <td class="badge"><span>${hl(r.group,term)}</span></td>
+      <td class="badge"><span>${hl(r.subgroup||"—",term)}</span></td>
+      <td>${r.nature||"—"}</td>
+      <td>${r.present||"—"}</td>
+    </tr>`).join("");
+  count.textContent = total ? `· ${total.toLocaleString("es-ES")} coincidencia(s)` : "· 0";
+  pageInfo.textContent = total ? `Página ${page} · ${start+1}–${end} / ${total}` : "Sin resultados";
 }
-function selectByCode(code){
-  const r = filtered.find(x=>x.code===code) || data.map(normalizeRecord).find(x=>x.code===code);
-  selection = r || null; renderDetails();
+function describe(r){
+  const m = rulesFor(r.code);
+  const partes = [];
+  partes.push(`La cuenta <b>${r.code} — ${r.name}</b> se encuadra en <i>${r.group}</i>${r.subgroup?` → <i>${r.subgroup}</i>`:""}.`);
+  partes.push(`Por su naturaleza se clasifica como <b>${m.nature}</b> con saldo normal <b>${m.balance}</b>.`);
+  partes.push(`En los estados financieros se presenta en: <b>${m.present}</b>.`);
+  if (m.tags?.length) partes.push(`Etiquetas: ${m.tags.join(", ")}.`);
+  return partes.join(" ");
 }
-function renderDetails(){
-  const d = selection;
-  $(\"#d_code\").textContent = d ? d.code : \"—\";
-  $(\"#d_name\").textContent = d ? d.name : \"—\";
-  $(\"#d_path\").textContent = d ? `${d.group||\"—\"} → ${d.subgroup||\"—\"} → ${d.code}` : \"—\";
-  $(\"#d_nature\").textContent = d ? d.nature||\"—\" : \"—\";
-  $(\"#d_balance\").textContent = d ? d.balance||\"—\" : \"—\";
-  $(\"#d_present\").textContent = d ? d.present||\"—\" : \"—\";
-  const chips = $(\"#chips\"); chips.innerHTML = \"\";
-  if (d && d._tags) d._tags.forEach(t=>{ const el=document.createElement(\"span\"); el.className=\"chip\"; el.textContent=t; chips.appendChild(el); });
+function renderAccordion(){
+  const acc=$("#accordion"); const term=q.value.trim();
+  acc.innerHTML = filtered.map(r=>{
+    const title = `${r.code} — ${r.name}`;
+    const desc  = describe(r);
+    const chips = (r._tags||[]).map(t=>`<span class="chip">${t}</span>`).join("");
+    return `<details id="acc-${r.code}">
+      <summary>
+        <div class="sum-left"><span class="pill">${r.code}</span> <span>${hl(title, term)}</span></div>
+        <div class="badge"><span>${r.nature||rulesFor(r.code).nature}</span></div>
+      </summary>
+      <div class="meta">
+        <div>Código</div><div>${r.code}</div>
+        <div>Nombre</div><div>${r.name}</div>
+        <div>Jerarquía</div><div>${r.group} ${r.subgroup?("→ "+r.subgroup):""}</div>
+        <div>Naturaleza</div><div>${r.nature||rulesFor(r.code).nature}</div>
+        <div>Saldo normal</div><div>${r.balance||rulesFor(r.code).balance}</div>
+        <div>Presentación</div><div>${r.present||rulesFor(r.code).present}</div>
+      </div>
+      <div class="chips">${chips}</div>
+      <div class="explain">${desc}</div>
+    </details>`;
+  }).join("");
 }
 
-// Eventos
-q.addEventListener(\"input\", applyFilters);
-fGroup.addEventListener(\"change\", applyFilters);
-fNature.addEventListener(\"change\", applyFilters);
-document.querySelector(\"#prev\").addEventListener(\"click\", ()=>{ if(page>1){ page--; render(); }});
-document.querySelector(\"#next\").addEventListener(\"click\", ()=>{ const pages=Math.ceil(filtered.length/pageSize); if(page<pages){ page++; render(); }});
-document.querySelector(\"#rows\").addEventListener(\"click\", e=>{ const tr=e.target.closest(\"tr\"); if(!tr) return; selectByCode(tr.getAttribute(\"data-code\")); });
-
-// Importar JSON por arrastre/botón
-const drop = document.querySelector(\"#drop\"), file = document.querySelector(\"#file\");
-[\"dragenter\",\"dragover\"].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add(\"drag\"); }));
-[\"dragleave\",\"drop\"].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.remove(\"drag\"); }));
-drop.addEventListener(\"drop\", e=>{ const f=e.dataTransfer.files?.[0]; if(!f) return; const reader=new FileReader(); reader.onload=()=>loadFromText(reader.result); reader.readAsText(f,\"utf-8\"); });
-document.querySelector(\"#btnImport\").addEventListener(\"click\", ()=>file.click());
-file.addEventListener(\"change\", ()=>{ const f=file.files?.[0]; if(!f) return; const reader=new FileReader(); reader.onload=()=>loadFromText(reader.result); reader.readAsText(f,\"utf-8\"); });
-document.querySelector(\"#btnReset\").addEventListener(\"click\", ()=>{ data=[...demo]; initFilters(); applyFilters(); selectByCode(\"430\"); });
-
-function loadFromText(text){
+/* =========================
+   3) Carga de JSON (fetch)
+   ========================= */
+async function loadSource(url){
+  statusEl.textContent = ""; $("#btnReload").disabled = true;
   try{
-    const arr = JSON.parse(text);
-    if(!Array.isArray(arr)) throw new Error(\"El JSON debe ser un array de objetos.\");
-    if(!arr.every(o=>o.code && o.name)) throw new Error(\"Cada objeto necesita 'code' y 'name'.\");
-    data = arr; initFilters(); applyFilters(); if(data.length) selectByCode(String(data[0].code));
-    alert(`Se han cargado ${data.length.toLocaleString(\"es-ES\")} registros.`);
-  }catch(err){ console.error(err); alert(\"No se pudo cargar el JSON: \"+err.message); }
-}
-
-// 4) Auto-carga desde misma carpeta
-(async () => {
-  try{
-    const resp = await fetch(\"./pgc_cuadro_cuentas_demo.json\", {cache: \"no-store\"});
-    if (!resp.ok) throw new Error(\"No encontrado\");
-    const arr = await resp.json();
-    data = arr;
-  }catch(e){
-    console.warn(\"No se pudo cargar pgc_cuadro_cuentas_demo.json; usando DEMO interno.\", e);
-    data = [...demo];
+    const resp = await fetch(url, {cache:"no-store"});
+    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const json = await resp.json();
+    let flat;
+    if (Array.isArray(json)) {              // plano
+      flat = json;
+    } else if (Array.isArray(json?.subgroups) || Array.isArray(json?.accounts) || Array.isArray(json?.groups)) {
+      // algunos exportan {groups:[...]} otros un array de groups
+      const nested = Array.isArray(json) ? json : (json.groups || [json]);
+      flat = fromNestedToFlat(nested);
+    } else {                                // quizá sea un objeto con groups:[...]
+      const nested = json.groups || [];
+      flat = fromNestedToFlat(nested);
+    }
+    // Normalizo, ordeno y pinto
+    data = (flat||[]).map(x=>({code:String(x.code), name:x.name, group:x.group, subgroup:x.subgroup})).sort((a,b)=>a.code.localeCompare(b.code,'es',{numeric:true}));
+    if(!data.length) throw new Error("El JSON se cargó pero no contiene cuentas reconocibles.");
+    initFilterOptions(); applyFilters();
+    if(data.length) selectByCode(data[0].code);
+  }catch(err){
+    console.error(err);
+    statusEl.textContent = `No pude cargar ${url}: ${err.message}`;
+    data = []; filtered=[]; renderTable(); $("#accordion").innerHTML = "";
+  }finally{
+    $("#btnReload").disabled = false;
   }
-  initFilters(); applyFilters(); if (data.length) selectByCode(String(data[0].code));
-})();
+}
+
+/* =========================
+   4) Interacciones UI
+   ========================= */
+function selectByCode(code){
+  const r = filtered.find(x=>x.code===code) || data.find(x=>x.code===code);
+  if(!r){ return; }
+  const m = rulesFor(r.code);
+  $("#d_code").textContent = r.code;
+  $("#d_name").textContent = r.name;
+  $("#d_path").textContent = `${r.group}${r.subgroup?(" → "+r.subgroup):""} → ${r.code}`;
+  $("#d_nature").textContent = r.nature||m.nature;
+  $("#d_balance").textContent = r.balance||m.balance;
+  $("#d_present").textContent = r.present||m.present;
+  const chips = $("#chips"); chips.innerHTML=""; (m.tags||[]).forEach(t=>{ const el=document.createElement("span"); el.className="chip"; el.textContent=t; chips.appendChild(el); });
+  const det = document.querySelector(`#acc-${r.code}`); if(det) det.open = true;
+}
+// filtros/búsqueda
+q.addEventListener("input", applyFilters);
+fGroup.addEventListener("change", applyFilters);
+fNature.addEventListener("change", applyFilters);
+// paginación
+$("#prev").addEventListener("click", ()=>{ if(page>1){ page--; renderTable(); }});
+$("#next").addEventListener("click", ()=>{ const pages=Math.ceil(filtered.length/14); if(page<pages){ page++; renderTable(); }});
+// click fila → abre su details
+rows.addEventListener("click", (e)=>{ const tr=e.target.closest("tr"); if(!tr) return; selectByCode(tr.getAttribute("data-code")); });
+// cambiar fuente / recargar
+$("#btnReload").addEventListener("click", ()=> loadSource(sourceSel.value));
+sourceSel.addEventListener("change", ()=> loadSource(sourceSel.value));
+// importar JSON manual
+$("#btnImport").addEventListener("click", ()=> $("#file").click());
+$("#file").addEventListener("change", ()=>{
+  const f = $("#file").files?.[0]; if(!f) return;
+  const reader=new FileReader(); reader.onload=()=>{ try{
+    const obj = JSON.parse(reader.result);
+    const flat = Array.isArray(obj) ? obj : fromNestedToFlat(obj.groups||obj);
+    data = (flat||[]).map(x=>({code:String(x.code), name:x.name, group:x.group, subgroup:x.subgroup}));
+    initFilterOptions(); applyFilters(); if(data.length) selectByCode(data[0].code);
+  }catch(e){ statusEl.textContent="Importación fallida: "+e.message; } };
+  reader.readAsText(f,"utf-8");
+});
+
+/* =========================
+   5) Inicio
+   ========================= */
+function boot(){
+  // fuentes disponibles en el selector
+  sourceSel.innerHTML = DATA_SOURCES.map(s=>`<option value="${s.url}">${s.label}</option>`).join("");
+  // por defecto, la primera
+  loadSource(DATA_SOURCES[0].url);
+}
+boot();
 </script>
 </body>
 </html>
